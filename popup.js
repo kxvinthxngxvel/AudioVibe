@@ -3,44 +3,28 @@ const volumeSlider = document.getElementById('volumeSlider');
 const bars = document.querySelectorAll('.bar');
 
 function updateEqualizer(preset) {
-  // Adjust bar heights based on the selected preset (example)
-  switch (preset) {
-    case 'bassBoost':
-      bars[0].style.height = '80px';
-      bars[1].style.height = '60px';
-      // ... set heights for other bars
-      break;
-    // ... other presets
-    default:
-      bars.forEach(bar => bar.style.height = '40px'); // Reset to default
-  }
+  const barHeights = {
+    flat: [50, 50, 50, 50, 50],
+    bassBoost: [80, 70, 60, 50, 40],
+    vocalClarity: [40, 50, 70, 50, 40],
+    movieMode: [60, 70, 80, 70, 60]
+  };
+
+  barHeights[preset].forEach((height, index) => {
+    bars[index].style.height = `${height}px`;
+  });
 }
 
 presetSelect.addEventListener('change', () => {
   const selectedPreset = presetSelect.value;
-  let filterSettings = {};
-
-  switch (selectedPreset) {
-    case 'bassBoost':
-      filterSettings = { type: 'bassBoost' };
-      break;
-    case 'vocalClarity':
-      filterSettings = { type: 'vocalClarity' };
-      break;
-    case 'movieMode':
-      filterSettings = { type: 'movieMode' };
-      break;
-    default:
-      filterSettings = { type: 'flat' };
-  }
+  updateEqualizer(selectedPreset);
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    chrome.tabs.sendMessage(tabs[0].id, { 
-      filter: filterSettings,
-      volume: volumeSlider.value 
+    chrome.tabs.sendMessage(tabs[0].id, {
+      filter: { type: selectedPreset },
+      volume: volumeSlider.value
     });
   });
-  updateEqualizer(selectedPreset);
 });
 
 volumeSlider.addEventListener('input', () => {
@@ -49,5 +33,5 @@ volumeSlider.addEventListener('input', () => {
   });
 });
 
-// Initialize equalizer to the default state
+// Initialize on load
 updateEqualizer('flat');
